@@ -2,6 +2,7 @@
 # Imports
 #----------------------------------------------------------------------------#
 
+from email.policy import default
 import json
 import dateutil.parser
 import babel
@@ -37,9 +38,11 @@ class Venue(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
+    genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean())
+    website_link = db.Column(db.String(320))
+    seeking_talent = db.Column(db.String())
     seeking_description = db.Column(db.String())
     shows = db.relationship('Show', backref='venue', lazy=True)
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
@@ -55,6 +58,7 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website_link = db.Column(db.String(320))
     seeking_venue = db.Column(db.Boolean())
     seeking_description = db.Column(db.String())
     shows = db.relationship('Show', backref='artist', lazy=True)
@@ -211,13 +215,54 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  form = VenueForm()
+  if request.method == 'POST':
+    try:
+      name = request.form.get('name')
+      city = request.form.get('city')
+      state = request.form.get('state')
+      address = request.form.get('address')
+      phone = request.form.get('phone')
+      image_link = request.form.get('image_link')
+      genres = request.form.get('genres')
+      facebook_link = request.form.get('facebook_link')
+      website_link = request.form.get('website_link')
+      seeking_talent = request.form.get('seeking_talent')
+      seeking_description = request.form.get('seeking_description')
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+      venue = Venue(
+        name = name,
+        city = city,
+        state = state,
+        address = address,
+        phone = phone,
+        image_link = image_link,
+        genres = genres,
+        facebook_link = facebook_link,
+        website_link = website_link,
+        seeking_talent = seeking_talent,
+        seeking_description = seeking_description,
+      )
+      db.session.add(venue)
+      db.session.commit()
+      flash('Venue ' + name + ' was successfully listed!')
+      return render_template('pages/home.html', form=form)
+    
+    except:
+      db.session.rollback()
+      flash('An error occurred. Venue ' + name + ' could not be listed.')
+
+      return redirect('forms/new_venue.html')
+
+      
+
+
+  # # on successful db insert, flash success
+  # flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  # # TODO: on unsuccessful db insert, flash an error instead.
+  # # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  # # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  # return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -233,16 +278,7 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
   # TODO: replace with real data returned from querying the database
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+  data = Artist.query.all()
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
@@ -501,7 +537,7 @@ if not app.debug:
 
 # Default port:
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
 # Or specify port manually:
 '''
