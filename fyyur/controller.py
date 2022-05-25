@@ -47,13 +47,13 @@ def venues():
 @app.route('/venues/search', methods=['POST'])
 
 def search_venues():
-  input = request.form.get('search_term', '')
+  search_term = request.form.get('search_term', '')
   data = Venue.query.filter(func.lower(Venue.name).contains(func.lower(input))).all()
-  response = {
+  results = {
         "count": len(data),
         "data": data
     }
-  return render_template('pages/search_venues.html', results=response, search_term=input)
+  return render_template('pages/search_venues.html', results=results, search_term=search_term)
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -127,13 +127,13 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-  input = request.form.get('search_term', '')
+  search_term = request.form.get('search_term', '')
   data = Artist.query.filter(func.lower(Artist.name).contains(func.lower(input))).all()
-  response = {
+  results = {
         "count": len(data),
         "data": data
     }
-  return render_template('pages/search_artists.html', results=response, search_term=input)
+  return render_template('pages/search_artists.html', results=results, search_term=search_term)
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
