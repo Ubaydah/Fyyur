@@ -337,7 +337,7 @@ def shows():
         }
       )
 
-    return render_template("pages/shows.html", shows=data)
+  return render_template("pages/shows.html", shows=data)
 
 
 @app.route("/shows/create")
